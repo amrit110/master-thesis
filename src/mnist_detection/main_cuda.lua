@@ -11,7 +11,7 @@ require 'cutorch'
 
 -- Parameters and options
 -- Specify absolut path to this folder:
-path = '/home/jonlar/Master-Thesis/src/mnist_detection/'
+path = '/home/jonlar/masterThesis/src/mnist_detection/'
 pretrained = true
 geometry = {26,26}
 
