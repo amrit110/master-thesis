@@ -23,7 +23,7 @@ path = '/......./masterThesis/src/mnist_detection/'
 ```
 ### Testing ###
 The network accuracy is tested with the `evaluateError()` function, taking
-arguments `validation` or `test`. Training cost can be plotted with function
+arguments `'validation'` or `'test'`. Training cost can be plotted with function
 `plotCost()`.
 
 The file `plotfunc_cuda.lua` contains various functions used to test the
