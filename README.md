@@ -1,11 +1,11 @@
 # Master Thesis
 
-This repository contains a the code used during the master thesis project
+This repository contains the code used during the master thesis project
 "Vehicle detection and Road Scene Segmentation using Deep Learning" (Link to
 report). All approaches are based on Convolutional Neural Networks (CNNs) and are
-implemented in LuaJIT using [Torch7](http://torch.ch/).  More specifically, the repository includes
+implemented in LuaJIT using [Torch7](http://torch.ch/).  More specifically, the repository includes;
 
-* An [MNIST-based small scale detection](doc/mnist_detection.md) implementation. A CNN is 
+* An [MNIST-based detection](doc/mnist_detection.md) implementation. A CNN is 
 trained to classify regions of an image with spread out [MNIST](http://yann.lecun.com/exdb/mnist/) digits.
 Bounding boxes for digits are achieved through regression. The task was
 implemented as a proof if concept for the "detection through classification"
