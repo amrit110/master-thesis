@@ -1,3 +1,6 @@
+--file with transformation function to normalise data and other augmenting
+--functions. normalization is 
+
 require 'image'
 
 local M = {}
