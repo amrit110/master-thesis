@@ -1,7 +1,7 @@
 <a name="thesis.mnist"></a>
 ## MNIST detection ##
 
-These sections includes description of the basic usage for the MNIST detection
+These sections includes a breif description of the basic usage for the MNIST detection
 implementation.
 
 ### Data sets ###
