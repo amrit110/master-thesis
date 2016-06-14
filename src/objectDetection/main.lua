@@ -13,11 +13,7 @@ opt = {
     imgSize = {375, 1242},
     cropSize = {224,224},
     maskSize = {56,56},
-<<<<<<< HEAD
-    criterionWeights = {0,0,1},
-=======
     criterionWeights = {0.001,0.01,0},
->>>>>>> 5b6d020372b2442c1eee86e43667b9453168eb85
     --classWeightsClassifier = torch.Tensor{1,0,100,500,500,500,1000},
     --classWeightsClassifier = torch.Tensor{1,0,110,1000,3000},
     classWeightsClassifier = torch.Tensor{1,0,20},
@@ -39,11 +35,7 @@ torch.manualSeed = opt.manualSeed
 dofile 'model_resnet.lua'
 --dofile 'model_dilation.lua'
 --model = initialiseModel()
-<<<<<<< HEAD
 model = loadModel('2605') -- Specify the date the model was saved
-=======
-model = loadModel('2505') -- Specify the date the model was saved
->>>>>>> 5b6d020372b2442c1eee86e43667b9453168eb85
 
 
 model:cuda()

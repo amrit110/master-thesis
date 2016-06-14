@@ -3,15 +3,19 @@
   Containing files for loading original KITTI images, taking crops
   and creating propriate labels to be used in training.
 --]]
---
+
 require 'paths'
 require 'image'
 require 'nn'
 local t = require 'transforms'
 dir = require 'pl.dir'
 torch.setdefaulttensortype('torch.FloatTensor')
+math.randomseed(os.time())
+--file with function to create list of objects from the kitti dataset--
+dofile 'kittiDataSetup.lua'
+local allObjectsList, allImagePaths = makeObjectsList()
 
--- Parameters of masks and crop-masks used in training
+--parameters of masks and crop-masks used in training--
 local shrinkFactor = 0.05
 local maskWidth = torch.ceil(opt.imgSize[2]/opt.stride)
 local maskHeight = torch.ceil(opt.imgSize[1]/opt.stride)
@@ -19,7 +23,7 @@ local cropMaskWidth = opt.cropSize[1]/opt.stride
 local cropMaskHeight = opt.cropSize[1]/opt.stride
 
 local dataPath = '/mnt/data/KITTI_Object_Detection/'
--- Mean and standard deviation used for resnet34
+--mean and standard deviation used for resnet34--
 local meanstd = {
     mean = { 0.485, 0.456, 0.406 },
     std = { 0.229, 0.224, 0.225 },
@@ -98,56 +102,6 @@ function draw_bb(list, win_zoom, win, color)
     end
 end
 
---[[
---This Function was just used for testing so its commented out
-
-function getBBCoord()
-    folderPath = dataPath
-    local imagesPath = folderPath .. 'images/'
-    local annotationsPath = folderPath .. 'annotations'
-    local validImage = 0
-    local objects = {}
-    local input = {}
-    repeat 
-
-        local indexImage = math.random(1,#paths.dir(imagesPath)-2)
-        input = image.load(imagesPath .. '/' .. string.format('%06d.png',indexImage))    
-        input = input:mul(255)
-        input:add(-118.380948):div(61.896913)
-        local annotationFile = annotationsPath .. '/' .. string.format('%06d.txt',indexImage)
-        local lines = lines_from(annotationFile)
-        for i = 1,#lines do
-            local words = {}
-            for word in lines[i]:gmatch("%S+") do 
-                table.insert(words,word) 
-            end
-            if words[1] ~= 'DontCare' then
-                table.insert(objects,lines[i])
-            end
-            if #objects ~= 0 then
-                validImage = 1
-            end
-        end
-    until validImage == 1
-    local indexObject = math.random(1,#objects)
-    local words = {}
-    for word in objects[indexObject]:gmatch("%S+") do
-        table.insert(words,word)
-    end
-    local objectDimensions = {}
-    objectDimensions.w = words[10]
-    objectDimensions.h = words[9]
-    objectDimensions.l = words[11]
-    local translationAndRotation = {}
-    translationAndRotation.tx = words[12]
-    translationAndRotation.ty = words[14]
-    translationAndRotation.tz = words[13]
-    translationAndRotation.rz = words[15]
-    boundingBox = torch.Tensor{words[5],words[6],words[7],words[8]} 
-    img = input:clone()
-    plotBB()
-end
---]]
 
 function plotMasks()
     local nMasks = 1
@@ -183,26 +137,51 @@ function plotMasks()
     image.save('maskImages/mask.png',t)
 end
 
+function giveMeAnObject()
+    --pick random object. currently only for 3 classes but can be extended to
+    --more. object oriented programming (classes) would be so much better here!
+    local randomThrow = torch.uniform()
+    if (randomThrow < (1/opt.nClasses)) then
+        local objectIndex = math.random(1.#objectsList.cars.image) 
+        local imagePath = objectsList.cars.image[objectIndex]
+        local object = objectsList.cars.details[objectIndex]
+        local objects = lines_from(objectsList.cars.annotations[objectIndex])
+   elseif ((randomThrow >= (1/opt.nClasses)) and (randomThrow < (2/opt.nClasses))) then
+        local objectIndex = math.random(1.#objectsList.pedestrians.image) 
+        local imagePath = objectsList.pedestrians.image[objectIndex]
+        local object = objectsList.pedestrians.details[objectIndex]
+        local objects = lines_from(objectsList.pedestrians.annotations[objectIndex])
+    elseif ((randomThrow >= (2/opt.nClasses)) and (randomThrow < (3/opt.nClasses))) then
+        local objectIndex = math.random(1.#objectsList.cyclists.image) 
+        local imagePath = objectsList.cyclists.image[objectIndex]
+        local object = objectsList.cyclists.details[objectIndex]
+        local objects = lines_from(objectsList.cyclists.annotations[objectIndex])
+    end
+    return imagePath, object, objects
+end
+ 
 
-function makeCropAndMask(folderPath,indexImage,objects)
-    local imagesPath = folderPath .. 'images'
-    local input = image.load(imagesPath .. '/' .. string.format('%06d.png',indexImage))    
-    local imgHeight = input:size(2)
-    local imgWidth = input:size(3)
-    local mask = torch.zeros(opt.nClasses,maskHeight,maskWidth)
-    mask[1]:fill(1)
-    local bbLabel = torch.zeros(5,maskHeight,maskWidth)
-    local x1 = {}
-    local x2 = {}
-    local y1 = {}
-    local y2 = {}
-    local bbCoord = {}
-    local bbCoords = {}
-    local range = {}
-    local objectType = {} -- 1 is for background, 2 is for don't train class (includes dontCare, Misc, Tram and Person-Sitting, 3 is for Car, 4 is for Truck, 5 is for Van, 6 for Pedestrian, 7 for Cyclist)
-    local objectOcclusionState = {}
-    for i = 1, #objects do
-        local words = {}
+
+function makeCropAndMask()
+    if torch.uniform() < 0.5 then
+        local imagePath, object, objects = giveMeAnObject()
+        local input = image.load(imagePath)    
+        local imgHeight = input:size(2)
+        local imgWidth = input:size(3)
+        local mask = torch.zeros(opt.nClasses,maskHeight,maskWidth)
+        mask[1]:fill(1)
+        local bbLabel = torch.zeros(5,maskHeight,maskWidth)
+        local x1 = {}
+        local x2 = {}
+        local y1 = {}
+        local y2 = {}
+        local bbCoord = {}
+        local bbCoords = {}
+        local range = {}
+        local objectType = {} -- 1 is for background, 2 is for don't train class (includes dontCare, Misc, Tram and Person-Sitting, 3 is for Car, 4 is for Truck, 5 is for Van, 6 for Pedestrian, 7 for Cyclist)
+        local objectOcclusionState = {}
+        for i = 1, #objects do
+            local words = {}
         for word in objects[i]:gmatch("%S+") do
             table.insert(words,word)
         end
@@ -315,11 +294,6 @@ function makeCropAndMask(folderPath,indexImage,objects)
             for word in objectsSelected[objectIndex]:gmatch("%S+") do
                 table.insert(words,word)
             end
-            if torch.uniform() < 0.5 then
-                if words[1] ~= 'Cyclist' then
-                    return nil, nil, 0
-                end
-            end
             bbCoord = {words[5]+1,words[6]+1,words[7]+1,words[8]+1}
             centerx = bbCoord[1] + (bbCoord[3]-bbCoord[1])/2 + math.random(-opt.offsetCrop,opt.offsetCrop)
             centery = bbCoord[2] + (bbCoord[4]-bbCoord[2])/2 + math.random(-opt.offsetCrop,opt.offsetCrop)
@@ -374,53 +348,12 @@ end
 
 function loadImageAndMask(folderPath, mode)
     local input, mask, validImage
-    local imagesPath = folderPath .. 'images' 
-    local annotationsPath = folderPath .. 'annotations'
     local validImage = 0
-    local objects
-    local indexImage = 0
-
-    local minIndex, maxIndex
-    if mode == 'train' then
-        minIndex = 1
-        maxIndex = 6480
-    elseif mode == 'validation' then
-        minIndex = 6481
-        maxIndex = 6980
-    elseif mode == 'test' then
-        minIndex = 6981
-        maxIndex = 7480
-    end
     repeat
-        repeat
-            objects = {}
-            --indexImage = torch.random(1,#paths.dir(imagesPath)-2) - 1
-            indexImage = torch.random(minIndex,maxIndex)
-
-            local annotationFile = annotationsPath .. '/' .. string.format('%06d.txt',indexImage)
-            local lines = lines_from(annotationFile)
-            for i = 1,#lines do
-                local words = {}
-                for word in lines[i]:gmatch("%S+") do 
-                    table.insert(words,word) 
-                end
-                table.insert(objects,lines[i])
-                if #objects ~= 0 then
-                    validImage = 1
-                end
-            end
-        until validImage == 1
-        input, mask, objectMask, validImage = makeCropAndMask(folderPath,indexImage,objects)
+        input, mask, objectMask, validImage = makeCropAndMask()
     until validImage == 1
     input = transform(input)
-    -- 50% chance to flip image horizontally
-    -- Uninplemented: Flip masks and bounding box coordinates
-    --[[
-    if math.random() < 0.5 then
-        input = image.hflip(input)
-    end
-    --]]
-    return input, mask, --[[bbMasks,--]] objectMask
+    return input, mask, objectMask
 end
 
 

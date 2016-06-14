@@ -1,5 +1,6 @@
 --file with transformation function to normalise data and other augmenting
---functions. normalization is 
+--functions. normalization is for the resnet-18 network although it can be used
+--for other pre-trained networks if mean and std are correctly given.
 
 require 'image'
 
