@@ -35,3 +35,5 @@ heads of the network, use the function `setParameterNetwork()` with arguments
 
 
 ### Testing ###
+
+`test.lua` contains a set of functions used for testing a trained network qualitatively.
