@@ -3,13 +3,10 @@ dofile 'nms.lua'
 require 'paths'
 require 'groupBoxes'
 require 'qtwidget'
-local dataPath = '/mnt/data/KITTI_Object_Detection/'
 
-<<<<<<< HEAD
-=======
---indexImage = 90
->>>>>>> 5b6d020372b2442c1eee86e43667b9453168eb85
+local dataPath = '/mnt/data/KITTI_Object_Detection/'
 local imagesPath = '/mnt/data/cityscapes_processed/test/inputs/munich/'
+
 torch.setdefaulttensortype('torch.FloatTensor')
 function test()
     --require 'matio'
@@ -49,13 +46,8 @@ end
 
 
 function loadTestBatch()
-<<<<<<< HEAD
-    --local folderPath = dataPath .. 'testing' .. '/'
-    --local imagesPath = folderPath .. 'image_2'
-=======
     local folderPath = dataPath .. 'testing' .. '/'
     local imagesPath = folderPath .. 'image_2'
->>>>>>> 5b6d020372b2442c1eee86e43667b9453168eb85
     local indexImage = torch.random(1,#paths.dir(imagesPath)-2) - 1
     local input = image.load(imagesPath .. '/' .. string.format('%06d.png',indexImage))
     input = image.scale(input, 1024,'simple')

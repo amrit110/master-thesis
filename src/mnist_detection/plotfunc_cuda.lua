@@ -27,7 +27,7 @@ function plot_classifier(indx)
         matio.save('heatmaps.mat',pred)
         matio.save('scatter.mat',img)
     end
-    if true then
+    if false then
         upsampNet = nn.SpatialUpSamplingNearest(10)
         pred = upsampNet:forward(pred)
         for i=1,11 do
