@@ -28,3 +28,4 @@ deconvolutional part of the network, use the function `setParametersNet()` with 
 
 
 ### Testing ###
+File `test.lua` contains some useful functions for testing a trained network.
