@@ -40,6 +40,10 @@ local imagesPath = dataPath .. 'training/images/'
 local annotations = dir.getallfiles(annotationsPath)
 local images = dir.getallfiles(imagesPath)
 
+table.sort(annotations,function(a,b) return a < b end)
+table.sort(images,function(a,b) return a < b end)
+
+
 local objectsList = {}
 objectsList.cars = {}
 objectsList.cars.details = {}
@@ -79,7 +83,7 @@ function makeObjectsList()
         end
         xlua.progress(i,#annotations)
     end
-    return objectsList, images
+    return objectsList, images, annotations
 end
 
 

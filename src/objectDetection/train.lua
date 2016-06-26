@@ -19,12 +19,8 @@ function train()
             trainBatch
         )
     end
-<<<<<<< HEAD
-    donkeys:synchronize() 
-=======
     donkeys:synchronize()
     
->>>>>>> 5b6d020372b2442c1eee86e43667b9453168eb85
     model:clearState()
     collectgarbage()
     
@@ -39,15 +35,10 @@ end
 local timer = torch.Timer()
 local dataTimer = torch.Timer()
 
-<<<<<<< HEAD
 -- Defining the parameters to train.
-local parametersNetwork = nn.Sequential():add(model:get(2))
---local parametersNetwork = nn.Sequential():add(model:get(2)):add(model:get(3))
 --local parametersNetwork = nn.Sequential():add(model)
-=======
 -- Defining the parameters to train (DEFAULT: HEADS)
 local parametersNetwork = nn.Sequential():add(model:get(2))
->>>>>>> 5b6d020372b2442c1eee86e43667b9453168eb85
 local parameters, gradParameters = parametersNetwork:getParameters()
 
 -- Use to switch between training head and model

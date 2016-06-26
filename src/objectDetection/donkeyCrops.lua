@@ -13,8 +13,7 @@ torch.setdefaulttensortype('torch.FloatTensor')
 math.randomseed(os.time())
 --file with function to create list of objects from the kitti dataset--
 dofile 'kittiDataSetup.lua'
-local allObjectsList, allImagePaths = makeObjectsList()
-
+local allObjectsList, allImagePaths, allAnnotationPaths = makeObjectsList()
 --parameters of masks and crop-masks used in training--
 local shrinkFactor = 0.05
 local maskWidth = torch.ceil(opt.imgSize[2]/opt.stride)
@@ -112,7 +111,7 @@ function plotMasks()
     --img = img:index(1, perm) 
     --local mask1 = torch.add(torch.add(label:eq(3),label:eq(4)),label:eq(5))
     --mask1 = torch.add(torch.add(label[3],label[4]),label[5])
-    mask1 = label[5]
+    mask1 = label[3]
     --mask1:gt(0):double()
     --local mask2 = label:eq(2)
     --mask2:gt(0):double()
@@ -134,54 +133,72 @@ function plotMasks()
     win:showpage()
     image.display{image=img, win=win}
     local t = win:image():toTensor(3)
-    image.save('maskImages/mask.png',t)
 end
 
 function giveMeAnObject()
     --pick random object. currently only for 3 classes but can be extended to
     --more. object oriented programming (classes) would be so much better here!
     local randomThrow = torch.uniform()
-    if (randomThrow < (1/opt.nClasses)) then
-        local objectIndex = math.random(1.#objectsList.cars.image) 
-        local imagePath = objectsList.cars.image[objectIndex]
-        local object = objectsList.cars.details[objectIndex]
-        local objects = lines_from(objectsList.cars.annotations[objectIndex])
-   elseif ((randomThrow >= (1/opt.nClasses)) and (randomThrow < (2/opt.nClasses))) then
-        local objectIndex = math.random(1.#objectsList.pedestrians.image) 
-        local imagePath = objectsList.pedestrians.image[objectIndex]
-        local object = objectsList.pedestrians.details[objectIndex]
-        local objects = lines_from(objectsList.pedestrians.annotations[objectIndex])
-    elseif ((randomThrow >= (2/opt.nClasses)) and (randomThrow < (3/opt.nClasses))) then
-        local objectIndex = math.random(1.#objectsList.cyclists.image) 
-        local imagePath = objectsList.cyclists.image[objectIndex]
-        local object = objectsList.cyclists.details[objectIndex]
-        local objects = lines_from(objectsList.cyclists.annotations[objectIndex])
+    local objectIndex, imagePath, object, objects
+    if (randomThrow < (1/3)) then
+        objectIndex = math.random(1,#allObjectsList.cars.image) 
+        imagePath = allObjectsList.cars.image[objectIndex]
+        object = allObjectsList.cars.details[objectIndex]
+        objects = lines_from(allObjectsList.cars.annotations[objectIndex])
+   elseif ((randomThrow >= (1/3)) and (randomThrow < (2/3))) then
+        objectIndex = math.random(1,#allObjectsList.pedestrians.image) 
+        imagePath = allObjectsList.pedestrians.image[objectIndex]
+        object = allObjectsList.pedestrians.details[objectIndex]
+        objects = lines_from(allObjectsList.pedestrians.annotations[objectIndex])
+    elseif ((randomThrow >= (2/3)) and (randomThrow < (3/3))) then
+        objectIndex = math.random(1,#allObjectsList.cyclists.image) 
+        imagePath = allObjectsList.cyclists.image[objectIndex]
+        object = allObjectsList.cyclists.details[objectIndex]
+        objects = lines_from(allObjectsList.cyclists.annotations[objectIndex])
     end
     return imagePath, object, objects
 end
  
+function chooseWhatToMake()
+    local randomTry = torch.uniform()
+    local imagePath, object, objects
+    if randomTry < 1 then
+        repeat 
+            imagePath, object, objects = giveMeAnObject()
+            local words = {}
+            for word in object:gmatch("%S+") do
+                table.insert(words,word)
+            end
+        until (words[3] == '0')
+        return imagePath, object, objects
+    else
+        local imageIndex = math.random(1,#allImagePaths)
+        imagePath = allImagePaths[imageIndex]
+        objects = lines_from(allAnnotationPaths[imageIndex]) 
+        return imagePath, nil, objects
+    end
+end
 
 
 function makeCropAndMask()
-    if torch.uniform() < 0.5 then
-        local imagePath, object, objects = giveMeAnObject()
-        local input = image.load(imagePath)    
-        local imgHeight = input:size(2)
-        local imgWidth = input:size(3)
-        local mask = torch.zeros(opt.nClasses,maskHeight,maskWidth)
-        mask[1]:fill(1)
-        local bbLabel = torch.zeros(5,maskHeight,maskWidth)
-        local x1 = {}
-        local x2 = {}
-        local y1 = {}
-        local y2 = {}
-        local bbCoord = {}
-        local bbCoords = {}
-        local range = {}
-        local objectType = {} -- 1 is for background, 2 is for don't train class (includes dontCare, Misc, Tram and Person-Sitting, 3 is for Car, 4 is for Truck, 5 is for Van, 6 for Pedestrian, 7 for Cyclist)
-        local objectOcclusionState = {}
-        for i = 1, #objects do
-            local words = {}
+    local imagePath, object, objects = chooseWhatToMake()
+    local input = image.load(imagePath)    
+    local imgHeight = input:size(2)
+    local imgWidth = input:size(3)
+    local mask = torch.zeros(opt.nClasses,maskHeight,maskWidth)
+    mask[1]:fill(1)
+    local bbLabel = torch.zeros(5,maskHeight,maskWidth)
+    local x1 = {}
+    local x2 = {}
+    local y1 = {}
+    local y2 = {}
+    local bbCoord = {}
+    local bbCoords = {}
+    local range = {}
+    local objectType = {} -- 1 is for background, 2 is for don't train class (includes dontCare, Misc, Tram and Person-Sitting, 3 is for Car, 4 is for Truck, 5 is for Van, 6 for Pedestrian, 7 for Cyclist)
+    local objectOcclusionState = {}
+    for i = 1, #objects do
+        local words = {}
         for word in objects[i]:gmatch("%S+") do
             table.insert(words,word)
         end
@@ -194,15 +211,13 @@ function makeCropAndMask()
         centery = math.floor((centery)/opt.stride)
         h = h/opt.stride
         w = w/opt.stride
-        --h = 8/opt.stride + 1
-        --w = 8/opt.stride + 1
         table.insert(x1,math.max(1, math.min(maskWidth, (centerx - w/2))))
         table.insert(x2,math.max(1, math.min(maskWidth, (centerx + w/2))))
         table.insert(y1,math.max(1, math.min(maskHeight, (centery - h/2))))
         table.insert(y2,math.max(1, math.min(maskHeight, (centery + h/2))))
         table.insert(bbCoords,bbCoord)
         table.insert(range,(words[12]^2+words[13]^2+words[14]^2)^(1/2))
-        if ((words[1] == 'DontCare') --[[or (words[3] == '2')--]] or (words[3] == '3') or (words[1] == 'Person_sitting') or (words[1] == 'Van')) then
+        if ((words[1] == 'DontCare') or (words[2] == '2') or (words[3] == '3') or (words[1] == 'Person_sitting') or (words[1] == 'Van')) then
             table.insert(objectType,2)
         elseif words[1] == 'Car' then
             table.insert(objectType,3)
@@ -210,7 +225,7 @@ function makeCropAndMask()
             table.insert(objectType,4)
         elseif words[1] == 'Cyclist' then
             table.insert(objectType,5)
-        elseif ((words[1] == 'Misc') --[[or (words[1] == 'Person_sitting')--]] or (words[1] == 'Tram') or (words[1] == 'Truck')) then 
+        elseif ((words[1] == 'Misc') or (words[1] == 'Tram') or (words[1] == 'Truck')) then 
             table.insert(objectType,1)
         else 
             table.insert(objectType,1)
@@ -240,15 +255,6 @@ function makeCropAndMask()
         table.insert(objectOcclusionStateS,objectOcclusionState[indices[i]])
         table.insert(objectsS,objects[indices[i]])
     end
-    local objectsSelected = {}
-    for i = 1,nObjects do
-        if (objectTypeS[i] ~= 1) and (objectTypeS[i] ~= 2) and (objectOcclusionStateS[i] == '0') then
-            table.insert(objectsSelected,objectsS[i])
-        end
-    end
-    if next(objectsSelected) == nil  then
-        return nil, nil, 0
-    end
     for i = 1,nObjects do    
         if ((objectTypeS[i] ~=2) and (objectTypeS[i] ~= 1)) then
             if ((y1S[i]-1) > 0) and ((y2S[i]+1) < maskHeight+1) and ((x1S[i]-1) > 0) and ((x2S[i]+1) < maskWidth+1) then
@@ -276,10 +282,9 @@ function makeCropAndMask()
         bbLabel[{{5},{y1S[i],y2S[i]},{x1S[i],x2S[i]}}]:fill(rangeSorted[i]) 
     end
     local maskToReturn = torch.cat(mask,bbLabel,1)
-    local try = 0
     local x,y,w,h,centerx,centery,bbCoord, bkgFlag = {}
-    if torch.uniform() < 0.3 then
-        bkgFlag = 1
+    if object == nil then
+        print('background')
         centerx = torch.random(opt.cropSize[1]/2 , imgWidth - opt.cropSize[1]/2)
         centery = torch.random(opt.cropSize[1]/2, imgHeight - opt.cropSize[1]/2)
         x = centerx - opt.cropSize[1]/2
@@ -287,26 +292,23 @@ function makeCropAndMask()
         w = x + opt.cropSize[1] - 1
         h = y + opt.cropSize[1] - 1
     else
-        repeat 
-            try = try + 1
-            local objectIndex = torch.random(1,#objectsSelected)
-            local words = {}
-            for word in objectsSelected[objectIndex]:gmatch("%S+") do
-                table.insert(words,word)
-            end
-            bbCoord = {words[5]+1,words[6]+1,words[7]+1,words[8]+1}
-            centerx = bbCoord[1] + (bbCoord[3]-bbCoord[1])/2 + math.random(-opt.offsetCrop,opt.offsetCrop)
-            centery = bbCoord[2] + (bbCoord[4]-bbCoord[2])/2 + math.random(-opt.offsetCrop,opt.offsetCrop)
-            x = centerx - math.ceil(opt.cropSize[1]/2)
-            y = centery - math.ceil(opt.cropSize[1]/2) 
-            w = x + opt.cropSize[1] - 1
-            h = y + opt.cropSize[1] - 1
-            -- The function repeats and ensures that object crops are within the
-            -- image and also not having objects that have bounding boxes outside
-            -- the original image
-        until ((x > 0) and (y > 0) and (h <= imgHeight) and (w <= imgWidth) and (bbCoord[1] > 0) and (bbCoord[2] > 0) and (bbCoord[3] <= imgWidth) and (bbCoord[4] <= imgHeight)) or (try > #objects)
+        print('object')
+        local words = {}
+        for word in object:gmatch("%S+") do
+            table.insert(words,word)
+        end
+        bbCoord = {words[5]+1,words[6]+1,words[7]+1,words[8]+1}
+        centerx = bbCoord[1] + (bbCoord[3]-bbCoord[1])/2 
+        centerx = centerx + math.random(math.min(-opt.offsetCrop,-bbCoord[1]),math.min(opt.offsetCrop,imgWidth-bbCoord[3]))
+        centery = bbCoord[2] + (bbCoord[4]-bbCoord[2])/2 
+        centery = centery + math.random(math.min(-opt.offsetCrop,-bbCoord[2]),math.min(opt.offsetCrop,imgHeight-bbCoord[4]))
+        x = centerx - math.ceil(opt.cropSize[1]/2)
+        y = centery - math.ceil(opt.cropSize[1]/2) 
+        w = x + opt.cropSize[1] - 1
+        h = y + opt.cropSize[1] - 1
     end
     if (x < 1) or (y < 1) or (h > imgHeight) or (w > imgWidth) then
+        print('exceeding dimensions')
         return nil, nil, 0
     end
     local crop = input[{{},{y,h},{x,w}}]
@@ -317,12 +319,10 @@ function makeCropAndMask()
     local masky1 = math.max(1, math.min(maskHeight,maskCentery - math.floor(opt.cropSize[1]/(2*opt.stride))))
     local masky2 = math.max(1, math.min(maskHeight,maskCentery + math.floor(opt.cropSize[1]/(2*opt.stride))))
     if (masky2-masky1 ~= cropMaskHeight) or (maskx2-maskx1 ~= cropMaskWidth) then
+        print('mask dimensions not met')
         return nil,nil,0
     end
     maskToReturn = maskToReturn[{{},{masky1,masky2-1},{maskx1,maskx2-1}}]
---[[    if (bkgFlag == 1) and (torch.sum(torch.eq(maskToReturn,3)) ~= 0) then
-        return nil, nil, 0
-    end--]]
     maskToReturn[{{opt.nClasses+1},{},{}}]:add(-x)
     maskToReturn[{{opt.nClasses+2},{},{}}]:add(-y)
     maskToReturn[{{opt.nClasses+3},{},{}}]:add(-x)
@@ -346,9 +346,10 @@ function makeCropAndMask()
 end
 
 
+
 function loadImageAndMask(folderPath, mode)
     local input, mask, validImage
-    local validImage = 0
+    validImage = 0
     repeat
         input, mask, objectMask, validImage = makeCropAndMask()
     until validImage == 1

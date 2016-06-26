@@ -8,7 +8,7 @@ require 'nn'
 require 'cudnn'
 require 'cunn'
 require 'image'
-require 'Tiling'
+require 'tiling'
 
 cudnn.fastest = true
 cudnn.benchmark = true
@@ -95,7 +95,7 @@ function saveModel()
     model = model:clone()
     model:float()
     -- Store network and cost based on date
-    local directoryToSave = 'networks/' .. os.date("%d%m")
+    local directoryToSave = '/home/amrkri/Github/detection_residual/networks/' .. os.date("%d%m")
     os.execute("mkdir " .. directoryToSave)
     torch.save(directoryToSave .. '/' .. 'model.t7',model)
     torch.save(directoryToSave .. '/' .. 'cost.t7',cost)
@@ -105,9 +105,7 @@ end
 
 function loadModel(dateSaved)
     -- Takes argument of string 'dataSaved' eg '0411'
-    local model = torch.load('networks/' .. dateSaved .. '/model.t7')
-    cost = torch.load('networks/' .. dateSaved .. '/cost.t7')
-    --overallCost = torch.load('networks/' .. dateSaved .. '/overallCost.t7')
+    local model = torch.load('/home/amrkri/Github/detection_residual/networks/' .. dateSaved .. '/model.t7')
     collectgarbage()
     return model
 end
