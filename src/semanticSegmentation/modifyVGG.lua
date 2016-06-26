@@ -1,3 +1,6 @@
+--script to modify a pretrained VGG by removing last layers and saving it so
+--that it can be used for semantic segmentation
+
 require 'torch'
 require 'paths'
 require 'cudnn'

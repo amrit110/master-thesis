@@ -1,3 +1,6 @@
+--script used for inference on test images, uncomment according to the
+--sequence to be used--
+
 require 'paths'
 --sequencePath = '/mnt/data/cityscapes/leftImg8bit/train_extra/nuremberg/'
 sequencePath = '/mnt/data/demoVideo/stuttgart_00/'
@@ -9,7 +12,7 @@ require 'image'
 require 'qtwidget'
 
 
-
+--classifier output--
 function testNet()
     local matio = require 'matio'
     model:evaluate()
@@ -38,7 +41,7 @@ function testNet()
     image.display{image = out,zoom = 0.1}
 end
 
-
+--function used to visualise the output according to the label colours--
 function colourise(input)
     input = input:squeeze()
     local output = torch.zeros(3,input:size(1),input:size(2))
@@ -91,61 +94,8 @@ function colourise(input)
 end
 
 
-function colourise3(input)
-    input = input:squeeze()
-    local output = torch.zeros(3,input:size(1),input:size(2))
-    for i = 1,input:size(1) do
-        for j = 1,input:size(2) do
-            if input[i][j] == 1 then
-                output[{{},{i},{j}}] = torch.Tensor{0,0,0}
-            elseif input[i][j] == 2 then
-                output[{{},{i},{j}}] = torch.Tensor{128,64,128}
-            elseif input[i][j] == 3 then
-                output[{{},{i},{j}}] = torch.Tensor{128,64,128}
-            elseif input[i][j] == 4 then
-                output[{{},{i},{j}}] = torch.Tensor{128,64,128}
-            elseif input[i][j] == 5 then
-                output[{{},{i},{j}}] = torch.Tensor{128,64,128}
-            elseif input[i][j] == 6 then
-                output[{{},{i},{j}}] = torch.Tensor{128,64,128}
-            elseif input[i][j] == 7 then
-                output[{{},{i},{j}}] = torch.Tensor{128,64,128}
-            elseif input[i][j] == 8 then
-                output[{{},{i},{j}}] = torch.Tensor{128,64,128}
-            elseif input[i][j] == 9 then
-                output[{{},{i},{j}}] = torch.Tensor{128,64,128}
-            elseif input[i][j] == 10 then
-                output[{{},{i},{j}}] = torch.Tensor{128,64,128}
-            elseif input[i][j] == 11 then
-                output[{{},{i},{j}}] = torch.Tensor{128,64,128}
-            elseif input[i][j] == 12 then
-                output[{{},{i},{j}}] = torch.Tensor{128,64,128}
-            elseif input[i][j] == 13 then
-                output[{{},{i},{j}}] = torch.Tensor{255,0,0}
-            elseif input[i][j] == 14 then
-                output[{{},{i},{j}}] = torch.Tensor{255,0,0}
-            elseif input[i][j] == 15 then
-                output[{{},{i},{j}}] = torch.Tensor{0,0,142}
-            elseif input[i][j] == 16 then
-                output[{{},{i},{j}}] = torch.Tensor{0,0,142}
-            elseif input[i][j] == 17 then
-                output[{{},{i},{j}}] = torch.Tensor{0,0,142}
-            elseif input[i][j] == 18 then
-                output[{{},{i},{j}}] = torch.Tensor{0,0,142}
-            elseif input[i][j] == 19 then
-                output[{{},{i},{j}}] = torch.Tensor{0,0,142}
-            elseif input[i][j] == 20 then
-                output[{{},{i},{j}}] = torch.Tensor{0,0,142}
-            end
-        end
-    end
-    return output
-end
-
-
-
-
-
+--function to infer sequence of images. can be used on either KITTI sequences
+--or cityscapes
 function sequenceInference()
     torch.setdefaulttensortype('torch.FloatTensor')
     model = torch.load('/home/amrkri/Master_Thesis/savedModels/01/model.t7')
@@ -198,7 +148,6 @@ function saveSequence()
 end
 
 function saveImage(indexFile, window, where)
-    --local t = window
     local t = window:image():toTensor(3)
     image.save('resultVideos/'.. where .. string.format('%06d',indexFile) .. '.png', t)
 end

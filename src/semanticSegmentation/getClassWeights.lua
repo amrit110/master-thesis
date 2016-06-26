@@ -2,7 +2,6 @@
 --weights can be set properly when the data is not uniformly represented across
 --classes
 
---dofile 'data_semantic_second_stage.lua'
 dofile 'data.lua'
 
 N = 50
@@ -17,11 +16,7 @@ for i = 1,N do
     finalResults = torch.mean(results,1)
     xlua.progress(i,N)
 end
-
-t1 = {}
-for i = 1,finalResults:size(1) do
-    table.insert(t1,finalResults[i])
-end
-
+--class weights can be used with the criterion--
+print(finalResults)
 
 

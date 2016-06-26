@@ -1,3 +1,5 @@
+--script used to generate the png files for evaluation on the cityscapes.
+
 require 'torch'
 require 'nn'
 require 'cudnn'
@@ -20,10 +22,12 @@ function mysplit(inputstr,sep)
 end
 
 local dataPath = '/mnt/data/cityscapes/'
+--specify the path to save the results for submitting to server
 local resultsDir = 'results/'
-local model = torch.load('/home/amrkri/Master_Thesis/savedModels/semanticModel/model.t7')
+local model = torch.load('/mnt/data/pretrainedModels/networks/semanticSegmentation/semanticNetFull/model.t7')
 model:evaluate()
 
+--rescaling image and normalising to be used for input to the network
 function processImage(img)
     local rescaledHeight = img:size(2)/2
     local rescaledWidth = img:size(3)/2
@@ -38,6 +42,8 @@ function processImage(img)
     return resizedImg
 end
 
+--takes the output from the network and sets the original labels according to
+--the ciyscapes definition
 function resetLabels(indices)
     local result = indices:clone()
     result[indices:eq(1)] = 0

@@ -1,8 +1,10 @@
+--a handy script to play a sequence of images. alternative is to make a movie
+--with ffmpeg
 require 'paths'
 require 'image'
 require 'qtwidget'
-
-local path = '/home/amrkri/Master_Thesis/src/semantic_segmentation/resultVideos/heatmaps/'
+--specify path for images--
+local path = ''
 
 function playSequence()
     local input = image.load(path .. string.format('%06d.png',1))

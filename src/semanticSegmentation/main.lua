@@ -1,4 +1,4 @@
--- the main script for semantic segmentation--
+--the main script for semantic segmentation--
 
 
 --Requires--
@@ -31,13 +31,13 @@ opt = {
 --loading a pre-trained model from disk--
 if opt.loadPrevious then
     torch.setdefaulttensortype('torch.FloatTensor')
-    model = torch.load('/home/amrkri/Master_Thesis/savedModels/semanticModel/model.t7')
+    model = torch.load('/mnt/data/pretrainedModels/networks/semanticSegmentation/semanticNetFull/model.t7')
     model = model:cuda()
 else
     --creating a model with the VGG architecture and deconvnet--
     dofile 'model.lua'
     --creating a model using resnet-18 and dilating it--
-    --[[dofile 'model_dilation.lua'
+    --[[dofile 'modelDilation.lua'
     model = initialiseModel():cuda()--]]
 end
 

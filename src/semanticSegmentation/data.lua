@@ -20,7 +20,7 @@ function file_exists(file)
     if f then f:close() end
     return f ~= nil
 end
-
+--extract lines from a .txt file--
 function lines_from(file)
     if not file_exists(file) then return {} end
     local lines = {}
@@ -29,8 +29,7 @@ function lines_from(file)
     end
     return lines
 end
-
-
+--used for splitting strings--
 function mysplit(inputstr,sep)
     if sep == nil then
         sep = "%s"
@@ -48,7 +47,7 @@ local transform = t.Compose{
     t.ColorNormalize(meanstd),
     --t.CenterCrop(224),
     }
---Global Variables
+--Global Variables--
 inputWidth = 2048
 inputHeight = 1024
 reScaledWidth = 1024

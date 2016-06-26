@@ -32,11 +32,9 @@ end
 
 function saveModel()
     model:clearState()
-    torch.save('/home/amrkri/Master_Thesis/savedModels/semanticModel/model.t7',model)
-    torch.save('/home/amrkri/Master_Thesis/savedModels/semanticModel/trainingCost.t7',trainingCost)
-    torch.save('/home/amrkri/Master_Thesis/savedModels/semanticModel/validationCost.t7',validationCost)
+    torch.save('/mnt/data/pretrainedModels/networks/semanticSegmentation/semanticNetFull/model.t7',model)
 end
-
+--transfer learning. used to train deconvnet or full model--
 function setParametersNet(mode)
     if mode == 'model' then
         parametersNetwork = nn.Sequential():add(model)
@@ -85,7 +83,8 @@ function train()
     collectgarbage()
 end
 
-
+--can be used for validation. some errors with cudnn spatialfullconvolution.
+--So, did not use for the thesis.
 function validate()
     model:evaluate()
     local time = sys.clock()
