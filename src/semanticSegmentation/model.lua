@@ -1,4 +1,5 @@
---script used to create the model for semantic segmentation--
+--script used to create the model for semantic segmentation. can be used to
+--create the original version or lightweight version (stride 32 or 16)--
 
 require 'torch'
 require 'paths'
