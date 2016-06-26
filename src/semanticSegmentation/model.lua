@@ -1,3 +1,5 @@
+--script used to create the model for semantic segmentation--
+
 require 'torch'
 require 'paths'
 require 'cudnn'
@@ -5,11 +7,13 @@ require 'nn'
 require 'cunn'
 require 'image'
 
--- Load the model
+-- Load the original VGG
 modelPath = '/mnt/data/pretrainedModels/'
 
 local convnetLoad = torch.load(modelPath .. 'VGG/VGG.t7') 
 
+--the following part can be modified to either be the full network or
+--lightweight
 local weights1 = convnetLoad.modules[39].weight
 local bias1 = convnetLoad.modules[39].bias
 local weights2 = convnetLoad.modules[42].weight
@@ -44,6 +48,7 @@ SpatialConvolution = cudnn.SpatialConvolution
 SpatialFullConvolution = cudnn.SpatialFullConvolution
 convnet = convnetLoad:clone()
 
+--the deconvolution network--
 upsamplingnet = nn.Sequential()
 upsamplingnet:add(cudnn.SpatialBatchNormalization(4096))
 upsamplingnet:add(SpatialFullConvolution(4096,512,7,7,1,1))
