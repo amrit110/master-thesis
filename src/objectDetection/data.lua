@@ -1,4 +1,3 @@
-
 local ffi = require 'ffi'
 local Threads = require 'threads'
 Threads.serialization('threads.sharedserialize')
@@ -20,11 +19,11 @@ do -- start K datathreads (donkeys)
             local seed = opt.manualSeed + idx
             torch.manualSeed(seed)
             print(string.format('Starting donkey with id: %d seed: %d', tid, seed))
-            paths.dofile('donkeyCrops.lua')
+            paths.dofile('donkey.lua')
          end
       );
    else -- single threaded data loading. useful for debugging
-      paths.dofile('donkeyCrops.lua')
+      paths.dofile('donkey.lua')
       donkeys = {}
       function donkeys:addjob(f1, f2) f2(f1()) end
       function donkeys:synchronize() end
