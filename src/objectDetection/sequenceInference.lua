@@ -53,16 +53,14 @@ function createZeroPaddingNet(padRow,padCol)
 end
 --------------------
 
-function loadModel(dateSaved)
-    local model = torch.load('networks/' .. dateSaved .. '/model.t7')
-    cost = torch.load('networks/' .. dateSaved .. '/cost.t7')
+function loadModel(modelFolder)
+    local model = torch.load('/mnt/data/pretrainedModels/networks/' .. modelFolder .. '/model.t7')
     collectgarbage()
     return model
 end
 --------------------
 -- Fucntion for sorting a lua table
-
-model = loadModel('2605'):cuda()
+model = loadModel('autolivNet'):cuda()
 model:evaluate()
 
 function inferSequence() 
