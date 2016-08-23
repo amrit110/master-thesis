@@ -36,7 +36,7 @@ function lines_from(file)
 end
 
 local annotationsPath = dataPath .. 'training/annotations/'
-local imagesPath = dataPath .. 'training/images/'
+local imagesPath = dataPath .. 'training/imagesLeft/'
 local annotations = dir.getallfiles(annotationsPath)
 local images = dir.getallfiles(imagesPath)
 
@@ -62,8 +62,8 @@ objectsList.cyclists.annotations = {}
 function makeObjectsList()
     for i = 1,#annotations do
         local objects = lines_from(annotations[i])
-        local words = {}
         for j = 1,#objects do
+            local words = {}
             for word in objects[j]:gmatch("%S+") do 
                 table.insert(words,word) 
             end
